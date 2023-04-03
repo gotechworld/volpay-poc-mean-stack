@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+
+  app:
+    build:
+      context: app
+      dockerfile: .docker/Dockerfile
+    container_name: app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: dev
+      PORT: 3000
+      MONGO_URL: "mongodb://root:example@mongo:27017/"
+    ports:
+      - "3000:3000"
+    networks:
+      - mongodb
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: .docker/Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "5000:80"
+    networks:
+      - mongodb
+
+
+  mongodb:
+    image: mongo:5.0.6-focal
+    container_name: mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: "root"
+      MONGO_INITDB_ROOT_PASSWORD: "example"
+    volumes:
+      - ./data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - mongodb
+
+
+  mongo-express:
+    image: mongo-express:1.0.0-alpha.4
+    container_name: mongoui
+    restart: unless-stopped
+    environment:
+      ME_CONFIG_MONGODB_SERVER: "mongodb"
+      ME_CONFIG_MONGODB_ADMINUSERNAME: "root"
+      ME_CONFIG_MONGODB_ADMINPASSWORD: "example"
+      ME_CONFIG_MONGODB_URL: "mongodb://root:example@mongo:27017/"
+    ports:
+      - "8080:8081"
+    networks:
+      - mongodb
+networks:
+  mongodb:
+    driver: bridge
